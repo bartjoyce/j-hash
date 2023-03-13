@@ -16,6 +16,16 @@ void jhash_init(JHASH_CTX *ctx) {
     sha256_init(&ctx->sha_ctx);
     ctx->length = 0;
     ctx->hash_count = 0;
+    ctx->output_buffer = NULL;
+}
+
+void jhash_init_with_output_buffer(JHASH_CTX* ctx, unsigned char* output_buffer, size_t output_buffer_size) {
+    sha256_init(&ctx->sha_ctx);
+    ctx->length = 0;
+    ctx->hash_count = 0;
+    ctx->output_buffer = output_buffer;
+    ctx->output_buffer_size = output_buffer_size;
+    ctx->output_buffer_length = 0;
 }
 
 void jhash_update(JHASH_CTX *ctx, const unsigned char* data, size_t len) {
@@ -28,8 +38,7 @@ void jhash_update(JHASH_CTX *ctx, const unsigned char* data, size_t len) {
         return;
     }
 
-    // We have reached the end of the block, so we want to create the block
-
+    // We have reached the end of the block, so we want to create the block hash
     sha256_update(&ctx->sha_ctx, data, space_remaining_in_block);
     ctx->length += space_remaining_in_block;
 
@@ -65,40 +74,59 @@ void jhash_final(JHASH_CTX *ctx, char* hash) {
     }
 }
 
+
+
+size_t jhash_output_buffer_read(JHASH_CTX* ctx) {
+    assert(ctx->output_buffer);
+    size_t length = ctx->output_buffer_length;
+    ctx->output_buffer_length = 0;
+    return length;
+}
+
+
+
 void jhash_push_hash(JHASH_CTX *ctx) {
     assert(ctx->hash_count < JHASH_MAX_COUNT);
-    unsigned char* hash = &ctx->hashes[ctx->hash_count * SHA256_BLOCK_SIZE];
-    sha256_final(&ctx->sha_ctx, hash);
+    unsigned char* hash_ptr = &ctx->hashes[ctx->hash_count * SHA256_BLOCK_SIZE];
+    sha256_final(&ctx->sha_ctx, hash_ptr);
     sha256_init(&ctx->sha_ctx);
     ctx->hash_levels[ctx->hash_count] = 1;
     ctx->hash_count += 1;
+
+    // Write to output buffer
+    if (ctx->output_buffer) {
+        assert(ctx->output_buffer_size - ctx->output_buffer_length >= SHA256_BLOCK_SIZE);
+        memcpy(ctx->output_buffer + ctx->output_buffer_length, hash_ptr, SHA256_BLOCK_SIZE);
+        ctx->output_buffer_length += SHA256_BLOCK_SIZE;
+    }
 }
 
 void jhash_join_hashes(JHASH_CTX *ctx) {
     while (ctx->hash_count > 1) {
 
-        // Inspect the two top most hashes, where A is the top most, and B is the one below.
-        int a_index = ctx->hash_count - 1;
-        int b_index = ctx->hash_count - 2;
-        int a_level = ctx->hash_levels[a_index];
-        int b_level = ctx->hash_levels[b_index];
+        // Inspect the two top most hashes, where B is the top most, and A is the one below.
+        int a_level = ctx->hash_levels[ctx->hash_count - 2];
+        int b_level = ctx->hash_levels[ctx->hash_count - 1];
 
-        // If A's level is less than B's level, we cannot join these hashes
-        if (a_level < b_level) {
+        // If B's level is less than A's level, we cannot join these hashes
+        if (b_level < a_level) {
             break;
         }
 
-        // Pop the two hashes off the stack, concatenate them and hash them again
-        unsigned char* b_hash = &ctx->hashes[b_index * SHA256_BLOCK_SIZE];
-        sha256_update(&ctx->sha_ctx, b_hash, SHA256_BLOCK_SIZE);
-
-        unsigned char* a_hash = &ctx->hashes[a_index * SHA256_BLOCK_SIZE];
-        sha256_update(&ctx->sha_ctx, a_hash, SHA256_BLOCK_SIZE);
-
-        sha256_final(&ctx->sha_ctx, b_hash);
+        // Hash the two top hashes together
+        unsigned char* hash_ptr = &ctx->hashes[(ctx->hash_count - 2) * SHA256_BLOCK_SIZE];
+        sha256_update(&ctx->sha_ctx, hash_ptr, 2 * SHA256_BLOCK_SIZE);
+        sha256_final(&ctx->sha_ctx, hash_ptr);
         sha256_init(&ctx->sha_ctx);
         ctx->hash_count--;
 
-        ctx->hash_levels[ctx->hash_count - 1] = a_level + 1;
+        ctx->hash_levels[ctx->hash_count - 1] = b_level + 1;
+
+        // Write to output buffer
+        if (ctx->output_buffer) {
+            assert(ctx->output_buffer_size - ctx->output_buffer_length >= SHA256_BLOCK_SIZE);
+            memcpy(ctx->output_buffer + ctx->output_buffer_length, hash_ptr, SHA256_BLOCK_SIZE);
+            ctx->output_buffer_length += SHA256_BLOCK_SIZE;
+        }
     }
 }
