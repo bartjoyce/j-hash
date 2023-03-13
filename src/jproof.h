@@ -11,10 +11,7 @@
 
 #include "jhash.h"
 
-#define JHASH_BLOCK_SIZE      1024                // JHASH uses a default block size of 1024
-#define JHASH_MAX_COUNT       40                  // A depth of 40 allows for the generation of hashes of up to 1TiB
 #define JHASH_MAX_LENGTH      (1024 * 2147483648) // Size must not exceed 2TiB
-#define JHASH_DECODE_ERR      1
 
 typedef int JPROOF_INST;
 
