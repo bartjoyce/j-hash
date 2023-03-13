@@ -37,9 +37,9 @@ int main(int argc, const char** argv) {
             jhash_update(&ctx, buffer, length);
         }
 
-        char hash[JHASH_RESULT_MAX_SIZE];
-        jhash_final(&ctx, hash);
-        printf("%s\n", hash);
+        JHASH_VALUE result;
+        jhash_final(&ctx, &result);
+        printf("%s\n", jhash_encode(&result));
 
     } else {
 
@@ -69,9 +69,9 @@ int main(int argc, const char** argv) {
             }
         }
 
-        char hash[JHASH_RESULT_MAX_SIZE];
-        jhash_final(&ctx, hash);
-        printf("%s\n", hash);
+        JHASH_VALUE result;
+        jhash_final(&ctx, &result);
+        printf("%s\n", jhash_encode(&result));
 
         if ((length_out = jhash_output_buffer_read(&ctx)) > 0) {
             fwrite(output_buffer, 1, length_out, out);

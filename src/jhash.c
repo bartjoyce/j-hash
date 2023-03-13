@@ -53,7 +53,7 @@ void jhash_update(JHASH_CTX *ctx, const unsigned char* data, size_t len) {
     }
 }
 
-void jhash_final(JHASH_CTX *ctx, char* hash) {
+void jhash_final(JHASH_CTX* ctx, JHASH_VALUE* value) {
 
     // Finalise the final block, if it exists
     int final_block_size = ctx->length % JHASH_BLOCK_SIZE;
@@ -66,12 +66,8 @@ void jhash_final(JHASH_CTX *ctx, char* hash) {
     jhash_join_hashes(ctx);
 
     // Construct result
-    sprintf(hash, "jh%d:%ld:", JHASH_BLOCK_SIZE, ctx->length);
-    hash += strlen(hash);
-    for (int i = 0; i < SHA256_BLOCK_SIZE; ++i) {
-        sprintf(hash, "%02x", ctx->hashes[i]);
-        hash += 2;
-    }
+    value->length = ctx->length;
+    memcpy(value->payload, ctx->hashes, SHA256_BLOCK_SIZE);
 }
 
 
@@ -82,8 +78,6 @@ size_t jhash_output_buffer_read(JHASH_CTX* ctx) {
     ctx->output_buffer_length = 0;
     return length;
 }
-
-
 
 void jhash_push_hash(JHASH_CTX *ctx) {
     assert(ctx->hash_count < JHASH_MAX_COUNT);
