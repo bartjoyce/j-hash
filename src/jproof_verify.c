@@ -33,7 +33,7 @@ static int  largest_second_power(int value);
 
 void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value) {
     assert(value->length < JHASH_MAX_INPUT_LENGTH);
-    assert(0 < value->region_in_point && value->region_in_point < value->region_out_point && value->region_out_point <= value->length);
+    assert(0 < value->range_in_point && value->range_in_point < value->range_out_point && value->range_out_point <= value->length);
 
     // Prepare general state
     ctx->value = value;
@@ -42,15 +42,15 @@ void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value) {
     ctx->num_blocks_total = value->length / JHASH_BLOCK_SIZE;
     if (value->length % JHASH_BLOCK_SIZE > 0) ctx->num_blocks_total++;
 
-    int block_from = value->region_in_point  / JHASH_BLOCK_SIZE;
-    int block_to   = value->region_out_point / JHASH_BLOCK_SIZE;
+    int block_from = value->range_in_point  / JHASH_BLOCK_SIZE;
+    int block_to   = value->range_out_point / JHASH_BLOCK_SIZE;
     if (block_to % JHASH_BLOCK_SIZE > 0) block_to++;
     ctx->num_blocks_region = block_to - block_from;
 
     ctx->head_in_point = block_from * JHASH_BLOCK_SIZE;
-    ctx->head_size     = value->region_in_point - ctx->head_in_point;
-    ctx->tail_in_point = value->region_out_point;
-    ctx->tail_size     = block_to * JHASH_BLOCK_SIZE - value->region_out_point;
+    ctx->head_size     = value->range_in_point - ctx->head_in_point;
+    ctx->tail_in_point = value->range_out_point;
+    ctx->tail_size     = block_to * JHASH_BLOCK_SIZE - value->range_out_point;
     if (ctx->tail_in_point + ctx->tail_size > ctx->value->length) {
         ctx->tail_size = ctx->value->length - ctx->tail_in_point;
     }

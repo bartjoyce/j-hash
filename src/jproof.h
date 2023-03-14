@@ -17,8 +17,8 @@ typedef int JPROOF_INST;
 
 typedef struct {
     size_t length;
-    size_t region_in_point;
-    size_t region_out_point;
+    size_t range_in_point;
+    size_t range_out_point;
     size_t payload_length;
     unsigned char* payload;
 } JPROOF_VALUE;
@@ -57,7 +57,7 @@ typedef struct {
 
 } JPROOF_VERIFY_CTX;
 
-void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region_in_point, size_t region_out_point);
+void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t range_in_point, size_t range_out_point);
 void jproof_generate_write_head(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
 void jproof_generate_write_tail(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
 void jproof_generate_write_hash(JPROOF_GENERATE_CTX* ctx, int idx, const unsigned char* data);

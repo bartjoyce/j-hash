@@ -12,23 +12,23 @@
 static void traverse_node(JPROOF_GENERATE_CTX* ctx, int node_idx, int node_from, int node_to, int target_block_from, int target_block_to);
 static int  largest_second_power(int value);
 
-void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region_in_point, size_t region_out_point) {
+void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t range_in_point, size_t range_out_point) {
     assert(length < JHASH_MAX_INPUT_LENGTH);
-    assert(0 < region_in_point && region_in_point < region_out_point && region_out_point <= length);
+    assert(0 < range_in_point && range_in_point < range_out_point && range_out_point <= length);
 
     int num_blocks_total = length / JHASH_BLOCK_SIZE;
     if (length % JHASH_BLOCK_SIZE > 0) num_blocks_total++;
 
-    int block_from = region_in_point  / JHASH_BLOCK_SIZE;
-    int block_to   = region_out_point / JHASH_BLOCK_SIZE;
+    int block_from = range_in_point  / JHASH_BLOCK_SIZE;
+    int block_to   = range_out_point / JHASH_BLOCK_SIZE;
     if (block_to % JHASH_BLOCK_SIZE > 0) block_to++;
 
     // Prepare request
     ctx->request.num_hashes = 0;
     ctx->request.head_in_point = block_from * JHASH_BLOCK_SIZE;
-    ctx->request.head_size     = region_in_point - ctx->request.head_in_point;
-    ctx->request.tail_in_point = region_out_point;
-    ctx->request.tail_size     = block_to * JHASH_BLOCK_SIZE - region_out_point;
+    ctx->request.head_size     = range_in_point - ctx->request.head_in_point;
+    ctx->request.tail_in_point = range_out_point;
+    ctx->request.tail_size     = block_to * JHASH_BLOCK_SIZE - range_out_point;
     if (ctx->request.tail_in_point + ctx->request.tail_size > length) {
         ctx->request.tail_size = length - ctx->request.tail_in_point;
     }
@@ -38,8 +38,8 @@ void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region
     
     // Prepare value
     ctx->value.length = length;
-    ctx->value.region_in_point = region_in_point;
-    ctx->value.region_out_point = region_out_point;
+    ctx->value.range_in_point = range_in_point;
+    ctx->value.range_out_point = range_out_point;
     ctx->value.payload_length = ctx->request.head_size + ctx->request.tail_size + ctx->request.num_hashes * SHA256_BLOCK_SIZE;
     ctx->value.payload = (unsigned char*)malloc(ctx->value.payload_length);
 }

@@ -19,7 +19,7 @@ int main(int argc, const char** argv) {
     }
     
     FILE* file_in;
-    size_t file_size, region_in_point, region_out_point;
+    size_t file_size, range_in_point, range_out_point;
     {
         file_in = fopen(argv[2], "rb");
         if (file_in == NULL) {
@@ -30,15 +30,15 @@ int main(int argc, const char** argv) {
         file_size = ftell(file_in);
         fseek(file_in, 0, SEEK_SET);
     }
-    sscanf(argv[4], "%ld", &region_in_point);
-    sscanf(argv[5], "%ld", &region_out_point);
+    sscanf(argv[4], "%ld", &range_in_point);
+    sscanf(argv[5], "%ld", &range_out_point);
 
     JPROOF_VALUE val;
     JHASH_VALUE correct;
 
     {
         JPROOF_GENERATE_CTX ctx;
-        jproof_generate_init(&ctx, file_size, region_in_point, region_out_point);
+        jproof_generate_init(&ctx, file_size, range_in_point, range_out_point);
         val = ctx.value;
 
         unsigned char* ptr = val.payload;
@@ -64,7 +64,7 @@ int main(int argc, const char** argv) {
 
     char* res_string = jproof_encode(&val);
 
-    printf("JPROOF for file '%s' (%ld-%ld) = %s\n\n", argv[2], region_in_point, region_out_point, res_string);
+    printf("JPROOF for file '%s' (%ld-%ld) = %s\n\n", argv[2], range_in_point, range_out_point, res_string);
     
     JPROOF_VALUE test_val;
     jproof_decode(res_string, &test_val);
@@ -73,10 +73,10 @@ int main(int argc, const char** argv) {
         JPROOF_VERIFY_CTX ctx;
         jproof_verify_init(&ctx, &val);
 
-        fseek(file_in, region_in_point, SEEK_SET);
+        fseek(file_in, range_in_point, SEEK_SET);
 
         unsigned char buffer[BUFFER_SIZE];
-        size_t remaining = region_out_point - region_in_point;
+        size_t remaining = range_out_point - range_in_point;
         size_t length;
         while (remaining > 0) {
             size_t length = fread(buffer, 1, remaining < BUFFER_SIZE ? remaining : BUFFER_SIZE, file_in);
