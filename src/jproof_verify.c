@@ -85,39 +85,37 @@ void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value) {
     jproof_verify_update(ctx, &ctx->value->payload[0], ctx->head_size);
 }
 
-void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, size_t len) {
-    if (ctx->state != STATE_NEED_INPUT && len > 0) {
-        ctx->state = STATE_ERROR;
-        return;
-    }
+void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, long len) {
+    while (len > 0) {
+        if (ctx->state != STATE_NEED_INPUT) {
+            ctx->state = STATE_ERROR;
+            return;
+        }
 
-    int space_remaining_in_block = JHASH_BLOCK_SIZE - ctx->input_length % JHASH_BLOCK_SIZE;
-    int space_remaining_in_total = ctx->value->length - ctx->input_length;
-    int space_remaining = space_remaining_in_block < space_remaining_in_total ? space_remaining_in_block : space_remaining_in_total;
+        int space_remaining_in_block = JHASH_BLOCK_SIZE - ctx->input_length % JHASH_BLOCK_SIZE;
+        int space_remaining_in_total = ctx->value->length - ctx->input_length;
+        int space_remaining = space_remaining_in_block < space_remaining_in_total ? space_remaining_in_block : space_remaining_in_total;
 
-    // New data arriving fits in the current block
-    if (len < space_remaining) {
-        sha256_update(&ctx->sha_ctx, data, len);
-        ctx->input_length += len;
-        return;
-    }
+        // New data arriving fits in the current block
+        if (len < space_remaining) {
+            sha256_update(&ctx->sha_ctx, data, len);
+            ctx->input_length += len;
+            return;
+        }
 
-    // We have reached the end of the block, so we want to create the block hash
-    sha256_update(&ctx->sha_ctx, data, space_remaining);
-    ctx->input_length += space_remaining;
+        // We have reached the end of the block, so we want to create the block hash
+        sha256_update(&ctx->sha_ctx, data, space_remaining);
+        ctx->input_length += space_remaining;
 
-    const unsigned char* spillover_data = data + space_remaining;
-    size_t spillover_len = len - space_remaining;
+        len  -= space_remaining;
+        data += space_remaining;
 
-    // Push hash onto stack and continue running program
-    sha256_final(&ctx->sha_ctx, &ctx->stack[ctx->stack_idx * SHA256_BLOCK_SIZE]);
-    sha256_init(&ctx->sha_ctx);
-    ctx->stack_idx++;
-    ctx->program_counter++;
-    run_program(ctx);
-
-    if (spillover_len > 0) {
-        jproof_verify_update(ctx, spillover_data, spillover_len);
+        // Push hash onto stack and continue running program
+        sha256_final(&ctx->sha_ctx, &ctx->stack[ctx->stack_idx * SHA256_BLOCK_SIZE]);
+        sha256_init(&ctx->sha_ctx);
+        ctx->stack_idx++;
+        ctx->program_counter++;
+        run_program(ctx);
     }
 }
 
@@ -160,9 +158,6 @@ void traverse_node(JPROOF_VERIFY_CTX* ctx, int node_idx, int node_from, int node
 
     if (node_to <= target_block_from || node_from >= target_block_to) {
         // This node appears either before or after the target region, push the node's hash
-        int num_hashes_in_node = (node_to - node_from) * 2 - 1;
-        int hash_idx = node_idx + num_hashes_in_node - 1;
-        size_t hash_offset = hash_idx * SHA256_BLOCK_SIZE;
         ctx->program[ctx->program_size++] = INST_PUSH_HASH(ctx->num_hashes);
         ctx->num_hashes++;
         return;

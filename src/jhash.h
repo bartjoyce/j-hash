@@ -49,7 +49,7 @@ typedef struct {
 void jhash_init(JHASH_CTX* ctx);
 void jhash_init_with_output_file(JHASH_CTX* ctx, FILE* output_file);
 void jhash_init_with_output_buffer(JHASH_CTX* ctx, unsigned char* output_buffer, size_t output_buffer_size);
-void jhash_update(JHASH_CTX* ctx, const unsigned char* data, size_t len);
+void jhash_update(JHASH_CTX* ctx, const unsigned char* data, long len);
 void jhash_final(JHASH_CTX* ctx, JHASH_VALUE* value);
 
 size_t jhash_output_buffer_read(JHASH_CTX* ctx);

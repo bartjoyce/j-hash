@@ -37,28 +37,26 @@ void jhash_init_with_output_buffer(JHASH_CTX* ctx, unsigned char* output_buffer,
     ctx->output_buffer_length = 0;
 }
 
-void jhash_update(JHASH_CTX *ctx, const unsigned char* data, size_t len) {
-    int space_remaining_in_block = JHASH_BLOCK_SIZE - ctx->length % JHASH_BLOCK_SIZE;
+void jhash_update(JHASH_CTX *ctx, const unsigned char* data, long len) {
+    while (len > 0) {
+        int space_remaining_in_block = JHASH_BLOCK_SIZE - ctx->length % JHASH_BLOCK_SIZE;
 
-    // New data arriving fits in the current block
-    if (len < space_remaining_in_block) {
-        sha256_update(&ctx->sha_ctx, data, len);
-        ctx->length += len;
-        return;
-    }
+        // New data arriving fits in the current block
+        if (len < space_remaining_in_block) {
+            sha256_update(&ctx->sha_ctx, data, len);
+            ctx->length += len;
+            return;
+        }
 
-    // We have reached the end of the block, so we want to create the block hash
-    sha256_update(&ctx->sha_ctx, data, space_remaining_in_block);
-    ctx->length += space_remaining_in_block;
+        // We have reached the end of the block, so we want to create the block hash
+        sha256_update(&ctx->sha_ctx, data, space_remaining_in_block);
+        ctx->length += space_remaining_in_block;
 
-    const unsigned char* spillover_data = data + space_remaining_in_block;
-    size_t spillover_len = len - space_remaining_in_block;
+        len  -= space_remaining_in_block;
+        data += space_remaining_in_block;
 
-    jhash_push_hash(ctx);
-    jhash_join_hashes(ctx);
-
-    if (spillover_len > 0) {
-        jhash_update(ctx, spillover_data, spillover_len);
+        jhash_push_hash(ctx);
+        jhash_join_hashes(ctx);
     }
 }
 

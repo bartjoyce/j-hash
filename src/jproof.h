@@ -67,7 +67,7 @@ void jproof_generate_write_hash_from_file(JPROOF_GENERATE_CTX* ctx, int idx, FIL
 void jproof_generate_write_hashes_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file);
 
 void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value);
-void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, size_t len);
+void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, long len);
 int  jproof_verify_check_error(JPROOF_VERIFY_CTX* ctx);
 int  jproof_verify_final(JPROOF_VERIFY_CTX* ctx, JHASH_VALUE* value);
 void jproof_verify_free(JPROOF_VERIFY_CTX* ctx);
