@@ -53,7 +53,26 @@ void jproof_generate_write_tail(JPROOF_GENERATE_CTX* ctx, const unsigned char* d
 }
 
 void jproof_generate_write_hash(JPROOF_GENERATE_CTX* ctx, int idx, const unsigned char* data) {
-    memcpy(&ctx->value.payload[ctx->request.head_size + idx * SHA256_BLOCK_SIZE], data, SHA256_BLOCK_SIZE);
+    memcpy(&ctx->value.payload[ctx->request.head_size + ctx->request.tail_size + idx * SHA256_BLOCK_SIZE], data, SHA256_BLOCK_SIZE);
+}
+
+void jproof_generate_write_head_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file) {
+    fread(&ctx->value.payload[0], 1, ctx->request.head_size, file);
+}
+
+void jproof_generate_write_tail_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file) {
+    fread(&ctx->value.payload[ctx->request.head_size], 1, ctx->request.tail_size, file);
+}
+
+void jproof_generate_write_hash_from_file(JPROOF_GENERATE_CTX* ctx, int idx, FILE* file) {
+    fread(&ctx->value.payload[ctx->request.head_size + ctx->request.tail_size + idx * SHA256_BLOCK_SIZE], 1, SHA256_BLOCK_SIZE, file);
+}
+
+void jproof_generate_write_hashes_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file) {
+    for (int i = 0; i < ctx->request.num_hashes; ++i) {
+        fseek(file, ctx->request.hash_offsets[i], SEEK_SET);
+        jproof_generate_write_hash_from_file(ctx, i, file);
+    }
 }
 
 void traverse_node(JPROOF_GENERATE_CTX* ctx, int node_idx, int node_from, int node_to, int target_block_from, int target_block_to) {

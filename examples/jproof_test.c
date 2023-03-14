@@ -43,30 +43,23 @@ int main(int argc, const char** argv) {
 
         unsigned char* ptr = val.payload;
 
-        if (ctx.request.head_size) {
-            fseek(file_in, ctx.request.head_in_point, SEEK_SET);
-            ptr += fread(ptr, 1, ctx.request.head_size, file_in);
-        }
+        fseek(file_in, ctx.request.head_in_point, SEEK_SET);
+        jproof_generate_write_head_from_file(&ctx, file_in);
 
-        if (ctx.request.tail_size) {
-            fseek(file_in, ctx.request.tail_in_point, SEEK_SET);
-            ptr += fread(ptr, 1, ctx.request.tail_size, file_in);
-        }
+        fseek(file_in, ctx.request.tail_in_point, SEEK_SET);
+        jproof_generate_write_tail_from_file(&ctx, file_in);
 
         FILE* tree_in = fopen(argv[3], "rb");
         if (tree_in == NULL) {
             printf("Couldn't read file '%s'\n", argv[2]);
             return 1;
         }
-        
+
+        jproof_generate_write_hashes_from_file(&ctx, tree_in);
+
         fseek(tree_in, -32, SEEK_END);
         int did = fread(correct.payload, 1, 32, tree_in);
         correct.length = file_size;
-
-        for (int i = 0; i < ctx.request.num_hashes; ++i) {
-            fseek(tree_in, ctx.request.hash_offsets[i], SEEK_SET);
-            ptr += fread(ptr, 1, SHA256_BLOCK_SIZE, tree_in);
-        }
     }
 
     char* res_string = jproof_encode(&val);

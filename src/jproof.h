@@ -61,6 +61,10 @@ void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region
 void jproof_generate_write_head(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
 void jproof_generate_write_tail(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
 void jproof_generate_write_hash(JPROOF_GENERATE_CTX* ctx, int idx, const unsigned char* data);
+void jproof_generate_write_head_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file);
+void jproof_generate_write_tail_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file);
+void jproof_generate_write_hash_from_file(JPROOF_GENERATE_CTX* ctx, int idx, FILE* file);
+void jproof_generate_write_hashes_from_file(JPROOF_GENERATE_CTX* ctx, FILE* file);
 
 void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value);
 void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, size_t len);
