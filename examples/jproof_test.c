@@ -38,20 +38,19 @@ int main(int argc, const char** argv) {
 
     {
         JPROOF_GENERATE_CTX ctx;
-        jproof_generate(&ctx, file_size, region_in_point, region_out_point);
-
-        val = jproof_create_value(&ctx);
+        jproof_generate_init(&ctx, file_size, region_in_point, region_out_point);
+        val = ctx.value;
 
         unsigned char* ptr = val.payload;
 
-        if (ctx.head_size) {
-            fseek(file_in, ctx.head_in_point, SEEK_SET);
-            ptr += fread(ptr, 1, ctx.head_size, file_in);
+        if (ctx.request.head_size) {
+            fseek(file_in, ctx.request.head_in_point, SEEK_SET);
+            ptr += fread(ptr, 1, ctx.request.head_size, file_in);
         }
 
-        if (ctx.tail_size) {
-            fseek(file_in, ctx.tail_in_point, SEEK_SET);
-            ptr += fread(ptr, 1, ctx.tail_size, file_in);
+        if (ctx.request.tail_size) {
+            fseek(file_in, ctx.request.tail_in_point, SEEK_SET);
+            ptr += fread(ptr, 1, ctx.request.tail_size, file_in);
         }
 
         FILE* tree_in = fopen(argv[3], "rb");
@@ -64,8 +63,8 @@ int main(int argc, const char** argv) {
         int did = fread(correct.payload, 1, 32, tree_in);
         correct.length = file_size;
 
-        for (int i = 0; i < ctx.num_hashes; ++i) {
-            fseek(tree_in, ctx.hash_offsets[i], SEEK_SET);
+        for (int i = 0; i < ctx.request.num_hashes; ++i) {
+            fseek(tree_in, ctx.request.hash_offsets[i], SEEK_SET);
             ptr += fread(ptr, 1, SHA256_BLOCK_SIZE, tree_in);
         }
     }

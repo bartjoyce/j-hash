@@ -16,13 +16,22 @@ void jhash_init(JHASH_CTX *ctx) {
     sha256_init(&ctx->sha_ctx);
     ctx->length = 0;
     ctx->hash_count = 0;
+    ctx->output_file = NULL;
     ctx->output_buffer = NULL;
+}
+
+void jhash_init_with_output_file(JHASH_CTX* ctx, FILE* output_file) {
+    sha256_init(&ctx->sha_ctx);
+    ctx->length = 0;
+    ctx->hash_count = 0;
+    ctx->output_file = output_file;
 }
 
 void jhash_init_with_output_buffer(JHASH_CTX* ctx, unsigned char* output_buffer, size_t output_buffer_size) {
     sha256_init(&ctx->sha_ctx);
     ctx->length = 0;
     ctx->hash_count = 0;
+    ctx->output_file = NULL;
     ctx->output_buffer = output_buffer;
     ctx->output_buffer_size = output_buffer_size;
     ctx->output_buffer_length = 0;
@@ -70,14 +79,14 @@ void jhash_final(JHASH_CTX* ctx, JHASH_VALUE* value) {
     memcpy(value->payload, ctx->hashes, SHA256_BLOCK_SIZE);
 }
 
-
-
 size_t jhash_output_buffer_read(JHASH_CTX* ctx) {
     assert(ctx->output_buffer);
     size_t length = ctx->output_buffer_length;
     ctx->output_buffer_length = 0;
     return length;
 }
+
+
 
 void jhash_push_hash(JHASH_CTX *ctx) {
     assert(ctx->hash_count < JHASH_MAX_COUNT);
@@ -87,8 +96,10 @@ void jhash_push_hash(JHASH_CTX *ctx) {
     ctx->hash_levels[ctx->hash_count] = 1;
     ctx->hash_count += 1;
 
-    // Write to output buffer
-    if (ctx->output_buffer) {
+    // Write to output file or buffer
+    if (ctx->output_file) {
+        fwrite(hash_ptr, 1, SHA256_BLOCK_SIZE, ctx->output_file);
+    } else if (ctx->output_buffer) {
         assert(ctx->output_buffer_size - ctx->output_buffer_length >= SHA256_BLOCK_SIZE);
         memcpy(ctx->output_buffer + ctx->output_buffer_length, hash_ptr, SHA256_BLOCK_SIZE);
         ctx->output_buffer_length += SHA256_BLOCK_SIZE;
@@ -116,8 +127,10 @@ void jhash_join_hashes(JHASH_CTX *ctx) {
 
         ctx->hash_levels[ctx->hash_count - 1] = b_level + 1;
 
-        // Write to output buffer
-        if (ctx->output_buffer) {
+        // Write to output file or buffer
+        if (ctx->output_file) {
+            fwrite(hash_ptr, 1, SHA256_BLOCK_SIZE, ctx->output_file);
+        } else if (ctx->output_buffer) {
             assert(ctx->output_buffer_size - ctx->output_buffer_length >= SHA256_BLOCK_SIZE);
             memcpy(ctx->output_buffer + ctx->output_buffer_length, hash_ptr, SHA256_BLOCK_SIZE);
             ctx->output_buffer_length += SHA256_BLOCK_SIZE;

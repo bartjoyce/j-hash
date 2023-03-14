@@ -9,6 +9,7 @@
 #ifndef JHASH_H
 #define JHASH_H
 
+#include <stdio.h>
 #include "../lib/sha256.h"
 
 #ifndef jhash_alloc
@@ -34,6 +35,7 @@ typedef struct {
     char hash_levels[JHASH_MAX_COUNT];
     int hash_count;
 
+    FILE* output_file;
     unsigned char* output_buffer;
     size_t output_buffer_size;
     size_t output_buffer_length;
@@ -45,6 +47,7 @@ typedef struct {
 } JHASH_VALUE;
 
 void jhash_init(JHASH_CTX* ctx);
+void jhash_init_with_output_file(JHASH_CTX* ctx, FILE* output_file);
 void jhash_init_with_output_buffer(JHASH_CTX* ctx, unsigned char* output_buffer, size_t output_buffer_size);
 void jhash_update(JHASH_CTX* ctx, const unsigned char* data, size_t len);
 void jhash_final(JHASH_CTX* ctx, JHASH_VALUE* value);

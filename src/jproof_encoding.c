@@ -53,3 +53,9 @@ int jproof_decode(const char* string, JPROOF_VALUE* value) {
 
     return 0;
 }
+
+void jproof_value_free(JPROOF_VALUE* value) {
+    jhash_free(value->payload);
+    value->payload = NULL;
+    value->payload_length = 0;
+}

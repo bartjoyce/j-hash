@@ -32,7 +32,7 @@ static void run_program(JPROOF_VERIFY_CTX* ctx);
 static int  largest_second_power(int value);
 
 void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value) {
-    assert(value->length < JHASH_MAX_LENGTH);
+    assert(value->length < JHASH_MAX_INPUT_LENGTH);
     assert(0 < value->region_in_point && value->region_in_point < value->region_out_point && value->region_out_point <= value->length);
 
     // Prepare general state
@@ -152,10 +152,8 @@ int jproof_verify_final(JPROOF_VERIFY_CTX* ctx, JHASH_VALUE* value) {
 }
 
 void jproof_verify_free(JPROOF_VERIFY_CTX* ctx) {
-    if (ctx->program != NULL) {
-        jhash_free(ctx->program);
-        ctx->program = NULL;
-    }
+    jhash_free(ctx->program);
+    ctx->program = NULL;
 }
 
 void traverse_node(JPROOF_VERIFY_CTX* ctx, int node_idx, int node_from, int node_to, int target_block_from, int target_block_to) {

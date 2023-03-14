@@ -10,11 +10,11 @@
 #include "jhash.h"
 #include "../lib/base64.h"
 
-#define JHASH_MAX_LENGTH 80
+#define JHASH_MAX_INPUT_LENGTH 80
 
 char* jhash_encode(const JHASH_VALUE* value) {
 
-    char* buffer = (char*)jhash_alloc(JHASH_MAX_LENGTH);
+    char* buffer = (char*)jhash_alloc(JHASH_MAX_INPUT_LENGTH);
     sprintf(buffer, "jh%d:%ld:", JHASH_BLOCK_SIZE, value->length);
 
     char* ptr = buffer + strlen(buffer);
@@ -25,12 +25,12 @@ char* jhash_encode(const JHASH_VALUE* value) {
 
 int jhash_decode(const char* string, JHASH_VALUE* value) {
 
-    if (strlen(string) > JHASH_MAX_LENGTH) {
+    if (strlen(string) > JHASH_MAX_INPUT_LENGTH) {
         return JHASH_DECODE_ERR;
     }
 
     int block_size;
-    char buffer[JHASH_MAX_LENGTH];
+    char buffer[JHASH_MAX_INPUT_LENGTH];
 
     if (sscanf(string, "jh%d:%ld:%s", &block_size, &value->length, buffer) < 3) {
         return JHASH_DECODE_ERR;

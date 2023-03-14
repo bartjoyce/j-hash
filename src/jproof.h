@@ -11,7 +11,7 @@
 
 #include "jhash.h"
 
-#define JHASH_MAX_LENGTH      (1024 * 2147483648) // Size must not exceed 2TiB
+#define JHASH_MAX_INPUT_LENGTH (1024 * 2147483648) // Size must not exceed 2TiB
 
 typedef int JPROOF_INST;
 
@@ -24,18 +24,15 @@ typedef struct {
 } JPROOF_VALUE;
 
 typedef struct {
-    // General info
-    size_t length;
-    size_t region_in_point;
-    size_t region_out_point;
     int num_hashes;
-    int num_blocks_total;
-    int num_blocks_region;
-
-    // Generator state
     size_t hash_offsets[JHASH_MAX_COUNT];
     size_t head_in_point, head_size;
     size_t tail_in_point, tail_size;
+} JPROOF_REQUEST;
+
+typedef struct {
+    JPROOF_REQUEST request;
+    JPROOF_VALUE value;
 } JPROOF_GENERATE_CTX;
 
 typedef struct {
@@ -60,8 +57,10 @@ typedef struct {
 
 } JPROOF_VERIFY_CTX;
 
-void jproof_generate(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region_in_point, size_t region_out_point);
-JPROOF_VALUE jproof_create_value(JPROOF_GENERATE_CTX* ctx);
+void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t region_in_point, size_t region_out_point);
+void jproof_generate_write_head(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
+void jproof_generate_write_tail(JPROOF_GENERATE_CTX* ctx, const unsigned char* data);
+void jproof_generate_write_hash(JPROOF_GENERATE_CTX* ctx, int idx, const unsigned char* data);
 
 void jproof_verify_init(JPROOF_VERIFY_CTX* ctx, const JPROOF_VALUE* value);
 void jproof_verify_update(JPROOF_VERIFY_CTX* ctx, const unsigned char* data, size_t len);
@@ -71,5 +70,6 @@ void jproof_verify_free(JPROOF_VERIFY_CTX* ctx);
 
 int jproof_decode(const char* string, JPROOF_VALUE* value);
 char* jproof_encode(const JPROOF_VALUE* value);
+void jproof_value_free(JPROOF_VALUE* value);
 
 #endif // JPROOF_H
