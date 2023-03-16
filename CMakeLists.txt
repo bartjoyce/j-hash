@@ -8,6 +8,8 @@ add_library(jhash STATIC
     src/jhash_encoding.c
     lib/sha256.h
     lib/sha256.c
+    lib/base64.h
+    lib/base64.c
 )
 
 add_library(jproof STATIC

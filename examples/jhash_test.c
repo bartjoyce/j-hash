@@ -1,5 +1,4 @@
-#include "sha256.h"
-#include "jhash.h"
+#include "../src/jhash.h"
 #include <string.h>
 #include <stdio.h>
 

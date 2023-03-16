@@ -14,14 +14,14 @@ static int  largest_second_power(int value);
 
 void jproof_generate_init(JPROOF_GENERATE_CTX* ctx, size_t length, size_t range_in_point, size_t range_out_point) {
     assert(length < JHASH_MAX_INPUT_LENGTH);
-    assert(0 < range_in_point && range_in_point < range_out_point && range_out_point <= length);
+    assert(0 <= range_in_point && range_in_point < range_out_point && range_out_point <= length);
 
     int num_blocks_total = length / JHASH_BLOCK_SIZE;
     if (length % JHASH_BLOCK_SIZE > 0) num_blocks_total++;
 
     int block_from = range_in_point  / JHASH_BLOCK_SIZE;
     int block_to   = range_out_point / JHASH_BLOCK_SIZE;
-    if (block_to % JHASH_BLOCK_SIZE > 0) block_to++;
+    if (range_out_point % JHASH_BLOCK_SIZE > 0) block_to++;
 
     // Prepare request
     ctx->request.num_hashes = 0;
